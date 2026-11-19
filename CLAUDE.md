@@ -142,6 +142,7 @@ npm run format             Prettier
 | 2026-11-17 | Omar (con Claude) | Entorno Docker y guía de instalación (PR #2); `develop` ya no exige aprobación (el equipo aún no participa) |
 | 2026-11-17 | Omar (con Claude) | Base del proyecto: Next.js 16, Prisma 7 con las 32 tablas y reglas de integridad, seed, Vitest/Playwright, CI, pantallas temporales por rol, reparto de módulos y ADR 0002 (propuesta) |
 | 2026-11-18 | Omar (con Claude) | PR #3 fusionado; sprint 2 planeado en GitHub: milestone (vence sáb 21 nov, 9 p. m.) y 17 issues con pasos de programación, asignados a los 5; guía de contribución actualizada |
+| 2026-11-19 | José | Issue #16: componente de aviso de privacidad (LFPDPPP) y pantalla móvil Mi cuenta para consultar/editar perfil del pasajero (RF-014 y RF-015) |
 
 ## Registro de errores y soluciones
 
