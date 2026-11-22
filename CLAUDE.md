@@ -150,6 +150,7 @@ npm run format             Prettier
 | 2026-11-22 | Omar (con Claude) | Revisión de los PRs #22–#25; issue #27: índices únicos parciales (una asignación activa por chofer y embarcación, una solicitud de descuento pendiente por pasajero) |
 | 2026-11-22 | Omar (con Claude) | ADR 0002 aceptada: login propio (Argon2 + sesiones en BD, `requireRole` en servidor); se descartan Auth.js y Better Auth (#5) |
 | 2026-11-22 | Omar (con Claude) | Login por rol (#7): Argon2, sesiones en BD con hash del token y cookie HttpOnly, `requireRole`/`assertRole`/`requireApiRole`, `proxy.ts`, pantalla de login y cierre de sesión, bitácora; 40 pruebas unitarias y 10 de Playwright |
+| 2026-11-22 | José | Issue #17: cancelación de cuenta con borrado lógico, anonimización de datos personales, revocación de QR, cierre de sesiones, auditoría y advertencia de saldo disponible (RF-016) |
 
 ## Registro de errores y soluciones
 
