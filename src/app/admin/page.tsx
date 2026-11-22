@@ -16,9 +16,7 @@ export default async function AdminPage() {
           className="border-brand/20 text-brand hover:border-brand flex items-center justify-between rounded-2xl border bg-white px-5 py-4 shadow-xs transition"
         >
           <div>
-            <p className="font-heading text-brand text-base font-bold">
-              Revisión de descuentos
-            </p>
+            <p className="font-heading text-brand text-base font-bold">Revisión de descuentos</p>
             <p className="text-ink-muted text-xs">
               Valida credenciales de Estudiante o INAPAM y asigna vigencia (RF-019 y RF-020)
             </p>
