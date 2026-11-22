@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { updateProfile } from "@/application/account/update-profile";
 import { DomainError } from "@/domain/shared/domain-error";
 import { PrismaAccountRepository } from "@/infrastructure/account/prisma-account-repository";
+import { assertRole } from "@/lib/auth/require-role";
 
 export interface ProfileActionState {
   status: "idle" | "success" | "error";
@@ -15,16 +16,11 @@ export async function updatePassengerProfileAction(
   _prevState: ProfileActionState,
   formData: FormData,
 ): Promise<ProfileActionState> {
-  const userId = formData.get("userId");
-  if (typeof userId !== "string" || userId.trim() === "") {
-    return { status: "error", message: "No se pudo identificar la cuenta del pasajero." };
-  }
-
-  // TODO(#7): verificar sesión en servidor con requireRole("PASSENGER") y validar que userId coincida con la sesión.
+  const sessionUser = await assertRole("PASSENGER");
   const repo = new PrismaAccountRepository();
 
   try {
-    await updateProfile(repo, userId, {
+    await updateProfile(repo, sessionUser.id, {
       fullName: formData.get("fullName"),
       phone: formData.get("phone"),
     });

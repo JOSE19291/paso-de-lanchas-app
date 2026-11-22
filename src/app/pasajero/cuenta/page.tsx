@@ -4,18 +4,16 @@ import { Suspense } from "react";
 
 import { getProfileByEmail } from "@/application/account/get-profile";
 import { PrismaAccountRepository } from "@/infrastructure/account/prisma-account-repository";
+import { requireRole } from "@/lib/auth/require-role";
 
 import { ProfileForm } from "./profile-form";
 
 export const metadata: Metadata = { title: "Mi cuenta" };
 
-// Mientras se fusiona el login (#7), cargamos el pasajero de ejemplo del seed.
-const SEED_PASSENGER_EMAIL = "pasajero@pasolanchas.test";
-
 async function AccountContent() {
-  // TODO(#7): proteger con requireRole("PASSENGER") y obtener el id de la sesión activa.
+  const sessionUser = await requireRole("PASSENGER");
   const repo = new PrismaAccountRepository();
-  const profile = await getProfileByEmail(repo, SEED_PASSENGER_EMAIL);
+  const profile = await getProfileByEmail(repo, sessionUser.email);
 
   return (
     <ProfileForm

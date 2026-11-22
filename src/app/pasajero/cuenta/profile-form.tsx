@@ -82,8 +82,6 @@ export function ProfileForm({ profile }: ProfileFormProps) {
         action={formAction}
         className="border-line space-y-4 rounded-2xl border bg-white p-5 shadow-xs"
       >
-        <input type="hidden" name="userId" value={profile.id} />
-
         <h2 className="font-heading text-ink text-base font-bold">Datos personales</h2>
 
         {state.status === "success" && state.message ? (
