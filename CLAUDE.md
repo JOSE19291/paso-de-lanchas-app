@@ -160,3 +160,5 @@ npm run format             Prettier
 - Horario de servicio por muelle, duración del cruce, ritmo de llegada de pasajeros.
 - Tarifa vigente del transbordador por tipo de vehículo (prensa: $15 auto, $5 moto, $1 peatón; hay nota de alza a $30).
 - Validación actual de descuentos estudiante/INAPAM; conectividad en muelles; si los choferes tienen celular con GPS y datos.
+
+- **2026-11-21 (Issue #18 — Descuentos Estudiante/INAPAM):** Reglas de dominio (`src/domain/account/discount.ts`), validación Zod y casos de uso (`request-discount`, `review-discount`, `list-pending-discounts`, `get-my-discount`, `expire-discounts`), almacenamiento local privado en `uploads/` con ruta protegida `/api/admin/descuentos/[id]/credencial` y pantallas `/pasajero/descuento` y `/admin/descuentos`.
