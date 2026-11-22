@@ -4,10 +4,8 @@ import { revalidatePath } from "next/cache";
 
 import { reviewDiscount } from "@/application/account/review-discount";
 import { DomainError } from "@/domain/shared/domain-error";
-import {
-  PrismaDiscountRepository,
-  resolveDevAdminUser,
-} from "@/infrastructure/account/prisma-discount-repository";
+import { PrismaDiscountRepository } from "@/infrastructure/account/prisma-discount-repository";
+import { assertRole } from "@/lib/auth/require-role";
 
 export interface ReviewDiscountActionState {
   status: "idle" | "success" | "error";
@@ -18,11 +16,7 @@ export async function reviewDiscountAction(
   _prevState: ReviewDiscountActionState,
   formData: FormData,
 ): Promise<ReviewDiscountActionState> {
-  // TODO(#7): Verificar sesión activa con requireRole("ADMIN").
-  const admin = await resolveDevAdminUser();
-  if (!admin) {
-    return { status: "error", message: "No se encontró un administrador activo." };
-  }
+  const admin = await assertRole("ADMIN");
 
   const decision = formData.get("decision");
   const requestId = formData.get("requestId");

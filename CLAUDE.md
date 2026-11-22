@@ -150,6 +150,7 @@ npm run format             Prettier
 | 2026-11-22 | Omar (con Claude) | Revisión de los PRs #22–#25; issue #27: índices únicos parciales (una asignación activa por chofer y embarcación, una solicitud de descuento pendiente por pasajero) |
 | 2026-11-22 | Omar (con Claude) | ADR 0002 aceptada: login propio (Argon2 + sesiones en BD, `requireRole` en servidor); se descartan Auth.js y Better Auth (#5) |
 | 2026-11-22 | Omar (con Claude) | Login por rol (#7): Argon2, sesiones en BD con hash del token y cookie HttpOnly, `requireRole`/`assertRole`/`requireApiRole`, `proxy.ts`, pantalla de login y cierre de sesión, bitácora; 40 pruebas unitarias y 10 de Playwright |
+| 2026-11-22 | José | Issue #18 (revisión PR #25): solicitud y revisión de descuento Estudiante/INAPAM con sesiones reales (`requireRole`/`assertRole`/`requireApiRole`), bloqueo de revisión simultánea con `updateMany`, vigencia en hora de México y cabecera `X-Content-Type-Options: nosniff` (RF-019 y RF-020) |
 
 ## Registro de errores y soluciones
 
@@ -169,5 +170,3 @@ npm run format             Prettier
 - Horario de servicio por muelle, duración del cruce, ritmo de llegada de pasajeros.
 - Tarifa vigente del transbordador por tipo de vehículo (prensa: $15 auto, $5 moto, $1 peatón; hay nota de alza a $30).
 - Validación actual de descuentos estudiante/INAPAM; conectividad en muelles; si los choferes tienen celular con GPS y datos.
-
-- **2026-11-21 (Issue #18 — Descuentos Estudiante/INAPAM):** Reglas de dominio (`src/domain/account/discount.ts`), validación Zod y casos de uso (`request-discount`, `review-discount`, `list-pending-discounts`, `get-my-discount`, `expire-discounts`), almacenamiento local privado en `uploads/` con ruta protegida `/api/admin/descuentos/[id]/credencial` y pantallas `/pasajero/descuento` y `/admin/descuentos`.

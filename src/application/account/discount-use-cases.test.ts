@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { DiscountRequest } from "@/domain/account/discount";
+import { type DiscountRequest, getMexicoTodayUtcMidnight } from "@/domain/account/discount";
+import { DomainError } from "@/domain/shared/domain-error";
 
 import type {
   CreateDiscountRequestData,
@@ -67,7 +68,13 @@ class InMemoryDiscountRepository implements DiscountRepository {
     validUntil: Date,
     reviewedAt: Date,
   ): Promise<DiscountRequest> {
-    const item = this.items.find((i) => i.id === requestId)!;
+    const item = this.items.find((i) => i.id === requestId && i.status === "PENDING");
+    if (!item) {
+      throw new DomainError(
+        "DISCOUNT_ALREADY_REVIEWED",
+        "Esta solicitud ya fue revisada anteriormente.",
+      );
+    }
     item.status = "APPROVED";
     item.reviewedById = adminId;
     item.reviewedAt = reviewedAt;
@@ -82,7 +89,13 @@ class InMemoryDiscountRepository implements DiscountRepository {
     rejectionReason: string,
     reviewedAt: Date,
   ): Promise<DiscountRequest> {
-    const item = this.items.find((i) => i.id === requestId)!;
+    const item = this.items.find((i) => i.id === requestId && i.status === "PENDING");
+    if (!item) {
+      throw new DomainError(
+        "DISCOUNT_ALREADY_REVIEWED",
+        "Esta solicitud ya fue revisada anteriormente.",
+      );
+    }
     item.status = "REJECTED";
     item.reviewedById = adminId;
     item.reviewedAt = reviewedAt;
@@ -92,12 +105,13 @@ class InMemoryDiscountRepository implements DiscountRepository {
   }
 
   async markExpiredBefore(now: Date): Promise<number> {
+    const todayMexicoUtc = getMexicoTodayUtcMidnight(now);
     let count = 0;
     for (const item of this.items) {
       if (
         item.status === "APPROVED" &&
         item.validUntil &&
-        item.validUntil.getTime() <= now.getTime()
+        item.validUntil.getTime() < todayMexicoUtc.getTime()
       ) {
         item.status = "EXPIRED";
         count++;
@@ -184,6 +198,40 @@ describe("account discount use cases", () => {
     );
     expect(rejected.status).toBe("REJECTED");
     expect(rejected.rejectionReason).toBe("Credencial sin sello vigente");
+  });
+
+  it("impide que dos administradores revisen simultáneamente la misma solicitud", async () => {
+    const repo = new InMemoryDiscountRepository();
+    const req = await requestDiscount(
+      repo,
+      "user-1",
+      { discountType: "STUDENT", credentialPhotoPath: "uploads/cred.jpg" },
+      now,
+    );
+
+    const results = await Promise.allSettled([
+      reviewDiscount(
+        repo,
+        "admin-1",
+        {
+          requestId: req.id,
+          decision: "APPROVE",
+          validUntil: new Date("2027-06-30T00:00:00.000Z"),
+        },
+        now,
+      ),
+      reviewDiscount(
+        repo,
+        "admin-2",
+        { requestId: req.id, decision: "REJECT", rejectionReason: "Ilegible" },
+        now,
+      ),
+    ]);
+
+    const fulfilled = results.filter((r) => r.status === "fulfilled");
+    const rejected = results.filter((r) => r.status === "rejected");
+    expect(fulfilled).toHaveLength(1);
+    expect(rejected).toHaveLength(1);
   });
 
   it("expira automáticamente las solicitudes vencidas al consultar y permite renovar", async () => {

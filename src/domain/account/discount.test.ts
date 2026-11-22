@@ -31,17 +31,41 @@ describe("discount domain rules", () => {
     expect(() => validateRejectionReason("   ")).toThrow("Debes indicar el motivo del rechazo.");
   });
 
-  it("determina correctamente si un descuento está activo (aprobado y no vencido)", () => {
+  it("determina correctamente si un descuento está activo hasta el fin del día en hora de México", () => {
     const future = new Date("2027-01-15T00:00:00.000Z");
     const past = new Date("2026-11-01T00:00:00.000Z");
+    const validUntilDec30 = new Date("2026-12-30T00:00:00.000Z");
 
     expect(isDiscountActive({ status: "APPROVED", validUntil: future }, now)).toBe(true);
     expect(isDiscountActive({ status: "APPROVED", validUntil: past }, now)).toBe(false);
-    expect(isDiscountActive({ status: "APPROVED", validUntil: now }, now)).toBe(false);
     expect(isDiscountActive({ status: "APPROVED", validUntil: null }, now)).toBe(false);
     expect(isDiscountActive({ status: "PENDING", validUntil: future }, now)).toBe(false);
     expect(isDiscountActive({ status: "REJECTED", validUntil: future }, now)).toBe(false);
     expect(isDiscountActive({ status: "EXPIRED", validUntil: past }, now)).toBe(false);
+
+    // 30 de diciembre a las 6:00 PM hora de México (00:00 UTC del 31): aún vigente
+    expect(
+      isDiscountActive(
+        { status: "APPROVED", validUntil: validUntilDec30 },
+        new Date("2026-12-31T00:00:00.000Z"),
+      ),
+    ).toBe(true);
+
+    // 30 de diciembre a las 11:59 PM hora de México (05:59 UTC del 31): aún vigente
+    expect(
+      isDiscountActive(
+        { status: "APPROVED", validUntil: validUntilDec30 },
+        new Date("2026-12-31T05:59:59.000Z"),
+      ),
+    ).toBe(true);
+
+    // 31 de diciembre a las 12:00 AM medianoche hora de México (06:00 UTC del 31): vencido
+    expect(
+      isDiscountActive(
+        { status: "APPROVED", validUntil: validUntilDec30 },
+        new Date("2026-12-31T06:00:00.000Z"),
+      ),
+    ).toBe(false);
   });
 
   it("devuelve etiquetas legibles para tipos y estados de descuento", () => {

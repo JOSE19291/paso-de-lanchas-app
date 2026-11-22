@@ -11,10 +11,11 @@ import type {
   DiscountRepository,
   PendingDiscountItem,
 } from "@/application/account/discount-repository";
-import type {
-  DiscountRequest,
-  DiscountRequestStatus,
-  DiscountType,
+import {
+  type DiscountRequest,
+  type DiscountRequestStatus,
+  type DiscountType,
+  getMexicoTodayUtcMidnight,
 } from "@/domain/account/discount";
 import { DomainError } from "@/domain/shared/domain-error";
 import { prisma } from "@/infrastructure/db/prisma";
@@ -177,8 +178,8 @@ export class PrismaDiscountRepository implements DiscountRepository {
     validUntil: Date,
     reviewedAt: Date,
   ): Promise<DiscountRequest> {
-    const row = await prisma.discountRequest.update({
-      where: { id: requestId },
+    const updated = await prisma.discountRequest.updateMany({
+      where: { id: requestId, status: "PENDING" },
       data: {
         status: "APPROVED",
         reviewedById: adminId,
@@ -186,6 +187,17 @@ export class PrismaDiscountRepository implements DiscountRepository {
         validUntil,
         rejectionReason: null,
       },
+    });
+
+    if (updated.count === 0) {
+      throw new DomainError(
+        "DISCOUNT_ALREADY_REVIEWED",
+        "Esta solicitud ya fue revisada anteriormente.",
+      );
+    }
+
+    const row = await prisma.discountRequest.findUniqueOrThrow({
+      where: { id: requestId },
     });
     return mapToDomain(row);
   }
@@ -196,8 +208,8 @@ export class PrismaDiscountRepository implements DiscountRepository {
     rejectionReason: string,
     reviewedAt: Date,
   ): Promise<DiscountRequest> {
-    const row = await prisma.discountRequest.update({
-      where: { id: requestId },
+    const updated = await prisma.discountRequest.updateMany({
+      where: { id: requestId, status: "PENDING" },
       data: {
         status: "REJECTED",
         reviewedById: adminId,
@@ -206,14 +218,26 @@ export class PrismaDiscountRepository implements DiscountRepository {
         validUntil: null,
       },
     });
+
+    if (updated.count === 0) {
+      throw new DomainError(
+        "DISCOUNT_ALREADY_REVIEWED",
+        "Esta solicitud ya fue revisada anteriormente.",
+      );
+    }
+
+    const row = await prisma.discountRequest.findUniqueOrThrow({
+      where: { id: requestId },
+    });
     return mapToDomain(row);
   }
 
   async markExpiredBefore(now: Date): Promise<number> {
+    const todayMexicoUtc = getMexicoTodayUtcMidnight(now);
     const result = await prisma.discountRequest.updateMany({
       where: {
         status: "APPROVED",
-        validUntil: { lte: now },
+        validUntil: { lt: todayMexicoUtc },
       },
       data: {
         status: "EXPIRED",
@@ -221,26 +245,4 @@ export class PrismaDiscountRepository implements DiscountRepository {
     });
     return result.count;
   }
-}
-
-/**
- * TODO(#7): Reemplazar por requireRole("PASSENGER") al fusionarse el login.
- */
-export async function resolveDevPassengerUser() {
-  return prisma.user.findFirst({
-    where: { role: "PASSENGER", deletedAt: null },
-    orderBy: { createdAt: "asc" },
-    select: { id: true, fullName: true, email: true },
-  });
-}
-
-/**
- * TODO(#7): Reemplazar por requireRole("ADMIN") al fusionarse el login.
- */
-export async function resolveDevAdminUser() {
-  return prisma.user.findFirst({
-    where: { role: "ADMIN", deletedAt: null },
-    orderBy: { createdAt: "asc" },
-    select: { id: true, fullName: true, email: true },
-  });
 }

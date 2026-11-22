@@ -1,20 +1,16 @@
 import Link from "next/link";
-import { connection } from "next/server";
-import { Suspense } from "react";
 
 import { listPendingDiscounts } from "@/application/account/list-pending-discounts";
 import { PrismaDiscountRepository } from "@/infrastructure/account/prisma-discount-repository";
+import { requireRole } from "@/lib/auth/require-role";
 
 import { PendingDiscountsReviewList } from "./review-list";
 
-async function AdminPendingDiscountsContent() {
-  await connection();
+export default async function AdminDiscountsPage() {
+  await requireRole("ADMIN");
   const repo = new PrismaDiscountRepository();
   const pending = await listPendingDiscounts(repo);
-  return <PendingDiscountsReviewList items={pending} />;
-}
 
-export default function AdminDiscountsPage() {
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 py-6">
       <header className="mb-5">
@@ -26,9 +22,7 @@ export default function AdminDiscountsPage() {
           Verifica credenciales de Estudiante o INAPAM, asigna vigencia o indica motivo de rechazo.
         </p>
       </header>
-      <Suspense fallback={<div className="h-64 animate-pulse rounded-2xl bg-slate-200" />}>
-        <AdminPendingDiscountsContent />
-      </Suspense>
+      <PendingDiscountsReviewList items={pending} />
     </main>
   );
 }

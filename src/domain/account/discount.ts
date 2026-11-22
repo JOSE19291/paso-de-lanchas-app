@@ -4,6 +4,8 @@ export type DiscountType = "STUDENT" | "INAPAM";
 
 export type DiscountRequestStatus = "PENDING" | "APPROVED" | "REJECTED" | "EXPIRED";
 
+const MEXICO_UTC_OFFSET_HOURS = 6;
+
 export interface DiscountRequest {
   id: string;
   userId: string;
@@ -17,8 +19,41 @@ export interface DiscountRequest {
   createdAt: Date;
 }
 
+export function getMexicoTodayUtcMidnight(now: Date = new Date()): Date {
+  const shifted = new Date(now.getTime() - MEXICO_UTC_OFFSET_HOURS * 60 * 60 * 1000);
+  return new Date(Date.UTC(shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate()));
+}
+
+export function getMexicoExpirationDeadline(validUntil: Date): Date {
+  return new Date(
+    Date.UTC(
+      validUntil.getUTCFullYear(),
+      validUntil.getUTCMonth(),
+      validUntil.getUTCDate() + 1,
+      MEXICO_UTC_OFFSET_HOURS,
+      0,
+      0,
+      0,
+    ),
+  );
+}
+
 export function validateApprovalExpiration(validUntil: Date, now: Date = new Date()): void {
-  if (Number.isNaN(validUntil.getTime()) || validUntil.getTime() <= now.getTime()) {
+  if (Number.isNaN(validUntil.getTime())) {
+    throw new DomainError(
+      "INVALID_EXPIRATION_DATE",
+      "La fecha de vencimiento del descuento debe ser futura.",
+    );
+  }
+
+  const expirationDateUtc = Date.UTC(
+    validUntil.getUTCFullYear(),
+    validUntil.getUTCMonth(),
+    validUntil.getUTCDate(),
+  );
+  const todayMexicoUtc = getMexicoTodayUtcMidnight(now).getTime();
+
+  if (expirationDateUtc <= todayMexicoUtc) {
     throw new DomainError(
       "INVALID_EXPIRATION_DATE",
       "La fecha de vencimiento del descuento debe ser futura.",
@@ -41,7 +76,8 @@ export function isDiscountActive(
   if (request.status !== "APPROVED" || !request.validUntil) {
     return false;
   }
-  return request.validUntil.getTime() > at.getTime();
+  const deadline = getMexicoExpirationDeadline(request.validUntil);
+  return at.getTime() < deadline.getTime();
 }
 
 export function getDiscountTypeLabel(type: DiscountType): string {

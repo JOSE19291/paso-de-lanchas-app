@@ -7,9 +7,9 @@ import { DomainError } from "@/domain/shared/domain-error";
 import {
   deletePrivateCredentialFile,
   PrismaDiscountRepository,
-  resolveDevPassengerUser,
   savePrivateCredentialFile,
 } from "@/infrastructure/account/prisma-discount-repository";
+import { assertRole } from "@/lib/auth/require-role";
 
 export interface DiscountRequestActionState {
   status: "idle" | "success" | "error";
@@ -20,14 +20,7 @@ export async function submitDiscountRequestAction(
   _prevState: DiscountRequestActionState,
   formData: FormData,
 ): Promise<DiscountRequestActionState> {
-  // TODO(#7): Verificar sesión activa con requireRole("PASSENGER").
-  const passenger = await resolveDevPassengerUser();
-  if (!passenger) {
-    return {
-      status: "error",
-      message: "No se encontró un pasajero activo para registrar la solicitud.",
-    };
-  }
+  const passenger = await assertRole("PASSENGER");
 
   const fileEntry = formData.get("credentialPhoto");
   if (!(fileEntry instanceof File) || fileEntry.size === 0) {

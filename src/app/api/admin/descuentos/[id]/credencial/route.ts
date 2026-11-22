@@ -3,17 +3,13 @@ import { NextResponse } from "next/server";
 import {
   PrismaDiscountRepository,
   readPrivateCredentialFile,
-  resolveDevAdminUser,
 } from "@/infrastructure/account/prisma-discount-repository";
+import { requireApiRole } from "@/lib/auth/require-role";
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
-  // TODO(#7): Validar sesión activa con requireRole("ADMIN") cuando se fusione el login.
-  const admin = await resolveDevAdminUser();
-  if (!admin) {
-    return NextResponse.json(
-      { error: "Acceso restringido exclusivamente a administradores." },
-      { status: 403 },
-    );
+  const auth = await requireApiRole("ADMIN");
+  if (!auth.ok) {
+    return auth.response;
   }
 
   const { id } = await context.params;
@@ -39,6 +35,8 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     status: 200,
     headers: {
       "Content-Type": stored.contentType,
+      "Content-Disposition": "inline",
+      "X-Content-Type-Options": "nosniff",
       "Cache-Control": "no-store, private",
     },
   });
