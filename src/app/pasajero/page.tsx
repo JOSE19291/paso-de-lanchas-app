@@ -2,16 +2,18 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { ModulePlaceholder } from "@/components/module-placeholder";
+import { requireRole } from "@/lib/auth/require-role";
 
 export const metadata: Metadata = { title: "Pasajero" };
 
-export default function PassengerPage() {
+export default async function PassengerPage() {
+  const user = await requireRole("PASSENGER");
   return (
     <div className="mx-auto w-full max-w-2xl">
       <div className="px-6 pt-6">
         <Link
           href="/pasajero/cuenta"
-          className="border-brand/20 hover:border-brand flex items-center justify-between rounded-2xl border bg-white px-5 py-4 shadow-xs transition"
+          className="border-brand/20 text-brand hover:border-brand flex items-center justify-between rounded-2xl border bg-white px-5 py-4 shadow-xs transition"
         >
           <div>
             <p className="font-heading text-brand text-base font-bold">
@@ -26,6 +28,7 @@ export default function PassengerPage() {
       </div>
 
       <ModulePlaceholder
+        userName={user.fullName}
         role="Pasajero"
         modules={[
           { name: "Cuenta y perfil", owner: "José", requirements: "RF-014 a RF-020" },
