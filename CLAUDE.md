@@ -162,6 +162,7 @@ npm run format             Prettier
 | 2026-11-23 | Omar (con Claude) | Recuperar y cambiar contraseña (#8): enlace de 30 min de un solo uso (máx. 3 cada 30 min), cierre de sesiones, contraseña temporal obligatoria de cambiar (`requireRole`/`assertRole`), aviso por correo del cambio, `InputError` compartido, cuentas de prueba e2e con `globalSetup` |
 | 2026-11-22 | José | Issue #16 (revisión PR #23): eliminar `userId` oculto del formulario y obtener sesión en servidor con `requireRole`/`assertRole` |
 | 2026-11-23 | Omar (con Claude) | Permisos en GitHub (D26): equipo `desarrollo` con escritura, `.github/CODEOWNERS`, reglas de `develop` (PR obligatorio, CI en verde, aprobación de Omar); guía de contribución actualizada |
+| 2026-11-23 | José | Issue #40: galería de vehículos del pasajero con normalización de placas, tarifa vigente por tipo, borrado lógico, vistas `/pasajero/vehiculos` y endpoint `GET /api/pasajero/vehiculos` (RF-039 a RF-042) |
 
 ## Registro de errores y soluciones
 
