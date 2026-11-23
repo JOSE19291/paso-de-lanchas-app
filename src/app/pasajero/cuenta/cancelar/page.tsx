@@ -17,8 +17,8 @@ export default async function CancelAccountPage() {
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-6">
       <header className="mb-5">
-        <Link href="/pasajero" className="text-brand text-xs font-bold hover:underline">
-          ← Volver a Pasajero
+        <Link href="/pasajero/cuenta" className="text-brand text-xs font-bold hover:underline">
+          ← Volver a Mi cuenta
         </Link>
         <h1 className="font-heading text-ink mt-1 text-2xl font-bold">Cancelar cuenta</h1>
         <p className="text-ink-muted text-xs">

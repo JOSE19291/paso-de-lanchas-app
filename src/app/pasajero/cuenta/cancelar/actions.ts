@@ -3,7 +3,8 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { cancelAccount } from "@/application/account/cancel-account";
+import { createCancelAccount } from "@/application/account/cancel-account";
+import { systemClock } from "@/application/shared/ports";
 import { DomainError } from "@/domain/shared/domain-error";
 import { PrismaAccountCancellationRepository } from "@/infrastructure/account/prisma-account-cancellation-repository";
 import { argon2PasswordHasher } from "@/infrastructure/auth/argon2-password-hasher";
@@ -21,19 +22,18 @@ export async function cancelAccountAction(
 ): Promise<CancelAccountActionState> {
   const sessionUser = await assertRole("PASSENGER");
   const repo = new PrismaAccountCancellationRepository();
+  const cancelAccount = createCancelAccount({
+    repo,
+    passwordHasher: argon2PasswordHasher,
+    clock: systemClock,
+  });
 
   try {
-    await cancelAccount(
-      {
-        repo,
-        passwordHasher: argon2PasswordHasher,
-      },
-      sessionUser.id,
-      {
-        confirmationWord: formData.get("confirmationWord"),
-        acknowledgeBalanceLoss: formData.get("acknowledgeBalanceLoss") === "on",
-      },
-    );
+    await cancelAccount(sessionUser.id, {
+      currentPassword: formData.get("currentPassword"),
+      confirmationWord: formData.get("confirmationWord"),
+      acknowledgeBalanceLoss: formData.get("acknowledgeBalanceLoss") === "on",
+    });
   } catch (error) {
     if (error instanceof DomainError) {
       return { status: "error", message: error.message };

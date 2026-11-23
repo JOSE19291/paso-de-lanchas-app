@@ -1,6 +1,12 @@
 import { z } from "zod";
 
+import { PASSWORD_MAX_LENGTH } from "@/domain/auth/password-policy";
+
 export const cancelAccountSchema = z.object({
+  currentPassword: z
+    .string({ error: "Escribe tu contraseña actual." })
+    .min(1, "Escribe tu contraseña actual.")
+    .max(PASSWORD_MAX_LENGTH + 1),
   confirmationWord: z
     .string({ error: "Escribe CANCELAR para confirmar." })
     .trim()

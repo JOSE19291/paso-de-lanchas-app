@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 
 import type { AccountCancellationPreview } from "@/application/account/cancel-account";
+import { PasswordField } from "@/components/form-fields";
 
 import { type CancelAccountActionState, cancelAccountAction } from "./actions";
 
@@ -62,6 +63,12 @@ export function CancelAccountForm({ preview }: CancelAccountFormProps) {
         </div>
       ) : null}
 
+      <PasswordField
+        name="currentPassword"
+        label="Contraseña actual"
+        autoComplete="current-password"
+      />
+
       <div className="space-y-1.5">
         <label htmlFor="confirmationWord" className="text-ink block text-xs font-bold">
           Escribe <span className="font-mono text-red-700">CANCELAR</span> para confirmar
@@ -95,7 +102,7 @@ export function CancelAccountForm({ preview }: CancelAccountFormProps) {
           {isPending ? "Cancelando cuenta..." : "Confirmar cancelación definitiva"}
         </button>
         <Link
-          href="/pasajero"
+          href="/pasajero/cuenta"
           className="border-line text-ink-muted hover:text-ink w-full rounded-xl border px-4 py-2 text-center text-xs font-semibold transition"
         >
           Conservar mi cuenta

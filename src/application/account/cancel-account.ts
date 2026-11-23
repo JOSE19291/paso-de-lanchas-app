@@ -1,10 +1,9 @@
 import { randomBytes } from "node:crypto";
 
 import type { PasswordHasher } from "@/application/auth/ports";
+import { type Clock, systemClock } from "@/application/shared/ports";
 import {
-  type AnonymizedAccountData,
   type BalanceForfeitureWarning,
-  buildAnonymizedAccountData,
   buildBalanceForfeitureWarning,
   ensureAccountCanBeCancelled,
 } from "@/domain/account/account-cancellation";
@@ -17,6 +16,7 @@ export interface AccountCancellationSummary {
   id: string;
   email: string;
   fullName: string;
+  passwordHash: string;
   status: string;
   deletedAt: Date | null;
   balanceCents: number;
@@ -24,14 +24,20 @@ export interface AccountCancellationSummary {
 
 export interface ExecuteAccountCancellationParams {
   userId: string;
-  anonymizedData: AnonymizedAccountData;
+  randomPasswordHash: string;
   revokedAt: Date;
+  acknowledgeBalanceLoss: boolean;
+}
+
+export interface ExecuteAccountCancellationResult {
   forfeitedBalanceCents: number;
 }
 
 export interface AccountCancellationRepository {
   findAccountSummaryById(userId: string): Promise<AccountCancellationSummary | null>;
-  executeCancellation(params: ExecuteAccountCancellationParams): Promise<void>;
+  executeCancellation(
+    params: ExecuteAccountCancellationParams,
+  ): Promise<ExecuteAccountCancellationResult>;
 }
 
 export interface AccountCancellationPreview {
@@ -64,6 +70,7 @@ export async function getAccountCancellationPreview(
 export interface CancelAccountDeps {
   repo: AccountCancellationRepository;
   passwordHasher: PasswordHasher;
+  clock?: Clock;
   generateRandomSecret?: () => string;
 }
 
@@ -72,47 +79,57 @@ export interface CancelAccountResult {
   forfeitedBalanceCents: number;
 }
 
-export async function cancelAccount(
-  deps: CancelAccountDeps,
-  userId: string,
-  rawInput: unknown,
-  now: Date = new Date(),
-): Promise<CancelAccountResult> {
-  const parsed = cancelAccountSchema.safeParse(rawInput);
-  if (!parsed.success) {
-    const firstMessage =
-      parsed.error.issues[0]?.message ?? "Los datos de confirmación no son válidos.";
-    throw new DomainError("INVALID_CANCELLATION_INPUT", firstMessage);
-  }
+export function createCancelAccount(deps: CancelAccountDeps) {
+  const clock = deps.clock ?? systemClock;
+  const generateRandomSecret = deps.generateRandomSecret ?? (() => randomBytes(32).toString("hex"));
 
-  const summary = await deps.repo.findAccountSummaryById(userId);
-  if (!summary) {
-    throw new DomainError("ACCOUNT_NOT_FOUND", "No se encontró la cuenta del pasajero.");
-  }
+  return async function cancelAccount(
+    userId: string,
+    rawInput: unknown,
+  ): Promise<CancelAccountResult> {
+    const parsed = cancelAccountSchema.safeParse(rawInput);
+    if (!parsed.success) {
+      const firstMessage =
+        parsed.error.issues[0]?.message ?? "Los datos de confirmación no son válidos.";
+      throw new DomainError("INVALID_CANCELLATION_INPUT", firstMessage);
+    }
 
-  ensureAccountCanBeCancelled(summary);
+    const summary = await deps.repo.findAccountSummaryById(userId);
+    if (!summary) {
+      throw new DomainError("ACCOUNT_NOT_FOUND", "No se encontró la cuenta del pasajero.");
+    }
 
-  const balance = Money.fromCents(summary.balanceCents);
-  if (balance.cents > 0 && !parsed.data.acknowledgeBalanceLoss) {
-    throw new DomainError(
-      "BALANCE_ACKNOWLEDGEMENT_REQUIRED",
-      `Tienes un saldo de ${balance.format()}. Confirma que aceptas perderlo antes de cancelar tu cuenta.`,
+    ensureAccountCanBeCancelled(summary);
+
+    const passwordMatches = await deps.passwordHasher.verify(
+      summary.passwordHash,
+      parsed.data.currentPassword,
     );
-  }
+    if (!passwordMatches) {
+      throw new DomainError("INVALID_PASSWORD", "La contraseña no es correcta.");
+    }
 
-  const secretGenerator = deps.generateRandomSecret ?? (() => randomBytes(32).toString("hex"));
-  const randomPasswordHash = await deps.passwordHasher.hash(secretGenerator());
-  const anonymizedData = buildAnonymizedAccountData(userId, randomPasswordHash, now);
+    const previewBalance = Money.fromCents(summary.balanceCents);
+    if (previewBalance.cents > 0 && !parsed.data.acknowledgeBalanceLoss) {
+      throw new DomainError(
+        "BALANCE_ACKNOWLEDGEMENT_REQUIRED",
+        `Tienes un saldo de ${previewBalance.format()}. Confirma que aceptas perderlo antes de cancelar tu cuenta.`,
+      );
+    }
 
-  await deps.repo.executeCancellation({
-    userId,
-    anonymizedData,
-    revokedAt: now,
-    forfeitedBalanceCents: summary.balanceCents,
-  });
+    const now = clock.now();
+    const randomPasswordHash = await deps.passwordHasher.hash(generateRandomSecret());
 
-  return {
-    cancelledAt: now,
-    forfeitedBalanceCents: summary.balanceCents,
+    const { forfeitedBalanceCents } = await deps.repo.executeCancellation({
+      userId,
+      randomPasswordHash,
+      revokedAt: now,
+      acknowledgeBalanceLoss: parsed.data.acknowledgeBalanceLoss,
+    });
+
+    return {
+      cancelledAt: now,
+      forfeitedBalanceCents,
+    };
   };
 }
