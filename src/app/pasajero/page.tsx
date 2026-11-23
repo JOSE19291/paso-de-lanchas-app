@@ -12,16 +12,18 @@ export default async function PassengerPage() {
     <div className="mx-auto w-full max-w-2xl">
       <div className="px-6 pt-6">
         <Link
-          href="/pasajero/cuenta/cancelar"
-          className="flex items-center justify-between rounded-2xl border border-red-200 bg-white px-5 py-4 text-red-800 shadow-xs transition hover:border-red-400"
+          href="/pasajero/cuenta"
+          className="border-brand/20 text-brand hover:border-brand flex items-center justify-between rounded-2xl border bg-white px-5 py-4 shadow-xs transition"
         >
           <div>
-            <p className="font-heading text-base font-bold">Cancelar mi cuenta</p>
+            <p className="font-heading text-brand text-base font-bold">
+              Mi cuenta y aviso de privacidad
+            </p>
             <p className="text-ink-muted text-xs">
-              Elimina tus datos personales y cierra tu cuenta (RF-016)
+              Consulta y edita tus datos personales (RF-014 y RF-015)
             </p>
           </div>
-          <span className="text-sm font-bold">Abrir →</span>
+          <span className="text-brand text-sm font-bold">Abrir →</span>
         </Link>
       </div>
 

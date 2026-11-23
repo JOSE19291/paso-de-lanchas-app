@@ -27,8 +27,10 @@
 
 ## 2. Quién revisa a quién
 
-Regla del equipo: el PR lo revisa alguien **de otra área**. Mientras el equipo arranca, la aprobación no es obligatoria
-en `develop`, pero **cada PR debe tener al menos un comentario de revisión**.
+Regla del equipo: el PR lo revisa alguien **de otra área** y **cada PR debe tener al menos un comentario de revisión**.
+Para fusionar a `develop`, GitHub exige además la **aprobación de Omar** (responsable del código en `.github/CODEOWNERS`)
+y la CI en verde; **solo Omar fusiona** (decisión D26). La aprobación de un compañero no basta, pero su revisión sí
+cuenta: Omar la lee antes de aprobar.
 
 | Autor del PR | Revisa | Además, si toca la base | Además, si toca login/permisos/pagos |
 |---|---|---|---|
@@ -142,6 +144,17 @@ const user = auth.user;
 Cuentas para probar (después de `npm run db:seed`): las de la cabecera de `prisma/seed.ts`, entrando por
 `http://localhost:3000/login`. Las carpetas `/pasajero`, `/chofer`, `/admin` y `/superadmin` ya tienen `loading.tsx`, así
 que las páginas nuevas dentro de ellas pueden llamar a `requireRole` directamente.
+
+**Administrador y superadministrador (issue #9):** solo entran desde una **computadora autorizada**. La primera vez que
+entras con `admin.coa`, `admin.val` o `superadmin` desde tu navegador, el login dice que la computadora no está
+autorizada y crea la solicitud. Mientras el superadministrador no tenga su pantalla (sprint 3), apruébala en tu base local
+con `npm run dev:aprobar-computadoras` y vuelve a entrar. Además, el personal se bloquea 15 minutos tras 5 contraseñas
+incorrectas seguidas, y la sesión de admin/superadmin se cierra tras 30 minutos sin actividad.
+
+**Contraseña temporal (issue #8):** si una cuenta tiene `must_change_password = true` (la que el superadmin crea o
+restablece), `requireRole` la manda a `/cuenta/cambiar-contrasena` y `assertRole` / `requireApiRole` responden 403
+hasta que la cambie. No necesitas hacer nada en tus módulos: ya lo hacen esas funciones. Las pruebas de navegador de
+contraseñas usan cuentas `e2e.*@pasolanchas.test` que se preparan solas al correr `npm run test:e2e`.
 
 ## 5. Cómo empieza cada quien (su primer día)
 
