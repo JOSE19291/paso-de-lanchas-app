@@ -10,7 +10,22 @@ export default async function PassengerPage() {
   const user = await requireRole("PASSENGER");
   return (
     <div className="mx-auto w-full max-w-2xl">
-      <div className="px-6 pt-6">
+      <div className="space-y-3 px-6 pt-6">
+        <Link
+          href="/pasajero/cuenta"
+          className="border-brand/20 text-brand hover:border-brand flex items-center justify-between rounded-2xl border bg-white px-5 py-4 shadow-xs transition"
+        >
+          <div>
+            <p className="font-heading text-brand text-base font-bold">
+              Mi cuenta y aviso de privacidad
+            </p>
+            <p className="text-ink-muted text-xs">
+              Consulta y edita tus datos personales (RF-014 y RF-015)
+            </p>
+          </div>
+          <span className="text-brand text-sm font-bold">Abrir →</span>
+        </Link>
+
         <Link
           href="/pasajero/descuento"
           className="border-brand/20 text-brand hover:border-brand flex items-center justify-between rounded-2xl border bg-white px-5 py-4 shadow-xs transition"
