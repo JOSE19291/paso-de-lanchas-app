@@ -1,58 +1,76 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 
-import { ModulePlaceholder } from "@/components/module-placeholder";
+import { getProfileByEmail } from "@/application/account/get-profile";
+import { PrismaAccountRepository } from "@/infrastructure/account/prisma-account-repository";
 import { requireRole } from "@/lib/auth/require-role";
 
-export const metadata: Metadata = { title: "Pasajero" };
+import { ProfileForm } from "./profile-form";
 
-export default async function PassengerPage() {
-  const user = await requireRole("PASSENGER");
+export const metadata: Metadata = { title: "Mi cuenta" };
+
+async function AccountContent() {
+  const sessionUser = await requireRole("PASSENGER");
+  const repo = new PrismaAccountRepository();
+  const profile = await getProfileByEmail(repo, sessionUser.email);
+
   return (
-    <div className="mx-auto w-full max-w-2xl">
-      <div className="space-y-3 px-6 pt-6">
-        <Link
-          href="/pasajero/cuenta"
-          className="border-brand/20 text-brand hover:border-brand flex items-center justify-between rounded-2xl border bg-white px-5 py-4 shadow-xs transition"
-        >
-          <div>
-            <p className="font-heading text-brand text-base font-bold">
-              Mi cuenta y aviso de privacidad
-            </p>
-            <p className="text-ink-muted text-xs">
-              Consulta y edita tus datos personales (RF-014 y RF-015)
-            </p>
-          </div>
-          <span className="text-brand text-sm font-bold">Abrir →</span>
-        </Link>
-
-        <Link
-          href="/pasajero/vehiculos"
-          className="border-brand/20 text-brand hover:border-brand flex items-center justify-between rounded-2xl border bg-white px-5 py-4 shadow-xs transition"
-        >
-          <div>
-            <p className="font-heading text-brand text-base font-bold">Mis vehículos</p>
-            <p className="text-ink-muted text-xs">
-              Registra y administra tus vehículos para el transbordador (RF-039 a RF-042)
-            </p>
-          </div>
-          <span className="text-brand text-sm font-bold">Abrir →</span>
-        </Link>
-      </div>
-
-      <ModulePlaceholder
-        userName={user.fullName}
-        role="Pasajero"
-        modules={[
-          { name: "Cuenta y perfil", owner: "José", requirements: "RF-014 a RF-020" },
-          { name: "Saldo y recargas", owner: "Cova", requirements: "RF-021 a RF-031" },
-          { name: "Código QR de abordaje", owner: "Diego", requirements: "RF-032 a RF-038" },
-          { name: "Galería de vehículos", owner: "José", requirements: "RF-039 a RF-042" },
-          { name: "Mapa y rastreo en vivo", owner: "Diego", requirements: "RF-077 a RF-081" },
-          { name: "Información al pasajero", owner: "José", requirements: "RF-082 a RF-087" },
-          { name: "Notificaciones", owner: "José", requirements: "RF-106 a RF-109" },
-        ]}
+    <div className="space-y-5">
+      <ProfileForm
+        profile={{
+          id: profile.id,
+          email: profile.email,
+          fullName: profile.fullName,
+          phone: profile.phone,
+          photoUrl: profile.photoUrl,
+          privacyAcceptedAtIso: profile.privacyAcceptedAt
+            ? profile.privacyAcceptedAt.toISOString()
+            : null,
+        }}
       />
+
+      <section className="rounded-2xl border border-red-200 bg-white p-5 shadow-xs">
+        <h2 className="font-heading text-base font-bold text-red-800">Zona de baja</h2>
+        <p className="text-ink-muted mt-1 text-xs leading-relaxed">
+          Si ya no deseas usar el servicio, puedes solicitar la cancelación definitiva de tu cuenta
+          y la eliminación de tus datos personales.
+        </p>
+        <Link
+          href="/pasajero/cuenta/cancelar"
+          className="mt-4 inline-flex items-center justify-center rounded-xl border border-red-300 bg-red-50 px-4 py-2 text-xs font-bold text-red-800 transition hover:bg-red-100"
+        >
+          Cancelar mi cuenta
+        </Link>
+      </section>
     </div>
+  );
+}
+
+function AccountSkeleton() {
+  return (
+    <div aria-busy="true" className="space-y-5">
+      <div className="border-line h-36 animate-pulse rounded-2xl border bg-white" />
+      <div className="border-line h-80 animate-pulse rounded-2xl border bg-white" />
+    </div>
+  );
+}
+
+export default function PassengerAccountPage() {
+  return (
+    <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-6">
+      <header className="mb-5 flex items-center justify-between">
+        <div>
+          <Link href="/pasajero" className="text-brand text-xs font-bold hover:underline">
+            ← Volver a Pasajero
+          </Link>
+          <h1 className="font-heading text-ink mt-1 text-2xl font-bold">Mi cuenta</h1>
+        </div>
+      </header>
+
+      <Suspense fallback={<AccountSkeleton />}>
+        <AccountContent />
+      </Suspense>
+    </main>
   );
 }

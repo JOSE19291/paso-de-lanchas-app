@@ -10,7 +10,7 @@ export default async function PassengerPage() {
   const user = await requireRole("PASSENGER");
   return (
     <div className="mx-auto w-full max-w-2xl">
-      <div className="px-6 pt-6">
+      <div className="space-y-3 px-6 pt-6">
         <Link
           href="/pasajero/cuenta"
           className="border-brand/20 text-brand hover:border-brand flex items-center justify-between rounded-2xl border bg-white px-5 py-4 shadow-xs transition"
@@ -21,6 +21,34 @@ export default async function PassengerPage() {
             </p>
             <p className="text-ink-muted text-xs">
               Consulta y edita tus datos personales (RF-014 y RF-015)
+            </p>
+          </div>
+          <span className="text-brand text-sm font-bold">Abrir →</span>
+        </Link>
+
+        <Link
+          href="/pasajero/descuento"
+          className="border-brand/20 text-brand hover:border-brand flex items-center justify-between rounded-2xl border bg-white px-5 py-4 shadow-xs transition"
+        >
+          <div>
+            <p className="font-heading text-brand text-base font-bold">
+              Descuentos Estudiante e INAPAM
+            </p>
+            <p className="text-ink-muted text-xs">
+              Solicita o consulta tu tarifa preferencial (RF-019 y RF-020)
+            </p>
+          </div>
+          <span className="text-brand text-sm font-bold">Abrir →</span>
+        </Link>
+
+        <Link
+          href="/pasajero/vehiculos"
+          className="border-brand/20 text-brand hover:border-brand flex items-center justify-between rounded-2xl border bg-white px-5 py-4 shadow-xs transition"
+        >
+          <div>
+            <p className="font-heading text-brand text-base font-bold">Mis vehículos</p>
+            <p className="text-ink-muted text-xs">
+              Registra autos, motos o camionetas para abordar el transbordador (RF-039 a RF-042)
             </p>
           </div>
           <span className="text-brand text-sm font-bold">Abrir →</span>
