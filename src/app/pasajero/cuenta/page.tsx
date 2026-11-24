@@ -16,18 +16,34 @@ async function AccountContent() {
   const profile = await getProfileByEmail(repo, sessionUser.email);
 
   return (
-    <ProfileForm
-      profile={{
-        id: profile.id,
-        email: profile.email,
-        fullName: profile.fullName,
-        phone: profile.phone,
-        photoUrl: profile.photoUrl,
-        privacyAcceptedAtIso: profile.privacyAcceptedAt
-          ? profile.privacyAcceptedAt.toISOString()
-          : null,
-      }}
-    />
+    <div className="space-y-5">
+      <ProfileForm
+        profile={{
+          id: profile.id,
+          email: profile.email,
+          fullName: profile.fullName,
+          phone: profile.phone,
+          photoUrl: profile.photoUrl,
+          privacyAcceptedAtIso: profile.privacyAcceptedAt
+            ? profile.privacyAcceptedAt.toISOString()
+            : null,
+        }}
+      />
+
+      <section className="rounded-2xl border border-red-200 bg-white p-5 shadow-xs">
+        <h2 className="font-heading text-base font-bold text-red-800">Zona de baja</h2>
+        <p className="text-ink-muted mt-1 text-xs leading-relaxed">
+          Si ya no deseas usar el servicio, puedes solicitar la cancelación definitiva de tu cuenta
+          y la eliminación de tus datos personales.
+        </p>
+        <Link
+          href="/pasajero/cuenta/cancelar"
+          className="mt-4 inline-flex items-center justify-center rounded-xl border border-red-300 bg-red-50 px-4 py-2 text-xs font-bold text-red-800 transition hover:bg-red-100"
+        >
+          Cancelar mi cuenta
+        </Link>
+      </section>
+    </div>
   );
 }
 

@@ -1,10 +1,16 @@
 import { type Clock, systemClock } from "@/application/shared/ports";
 import { estimateArrival, estimateDeparture } from "@/domain/passenger-info/eta";
 
-import type { PassengerInfoRepository, VesselKindCode } from "./ports";
+import type {
+  ActiveBoardingDepartureRow,
+  BoardingDepartureStatusCode,
+  PassengerInfoRepository,
+  VesselKindCode,
+} from "./ports";
 
 export interface BoardingVesselView {
   departureId: string;
+  status: BoardingDepartureStatusCode;
   vesselName: string;
   vesselKind: VesselKindCode;
   vesselColor: string | null;
@@ -31,7 +37,7 @@ export interface DockStatusView {
   dockId: string;
   dockCode: string;
   dockName: string;
-  boarding: BoardingVesselView | null;
+  boarding: BoardingVesselView[];
   inbound: InboundVesselView | null;
 }
 
@@ -46,6 +52,45 @@ export interface GetDocksStatusDeps {
   clock?: Clock;
 }
 
+function toBoardingVesselView(row: ActiveBoardingDepartureRow, now: Date): BoardingVesselView {
+  if (row.status === "BOARDING_CLOSED") {
+    return {
+      departureId: row.id,
+      status: row.status,
+      vesselName: row.vesselName,
+      vesselKind: row.vesselKind,
+      vesselColor: row.vesselColor,
+      vesselPhotoUrl: row.vesselPhotoUrl,
+      passengerCapacity: row.passengerCapacity,
+      occupiedSeats: row.occupiedSeats,
+      driverName: row.driverName,
+      estimatedDepartureLabel: "Abordaje cerrado · por salir",
+      estimatedDepartureIso: null,
+    };
+  }
+
+  const eta = estimateDeparture(
+    row.passengerCapacity,
+    row.occupiedSeats,
+    row.boardingStartedAt,
+    now,
+  );
+
+  return {
+    departureId: row.id,
+    status: row.status,
+    vesselName: row.vesselName,
+    vesselKind: row.vesselKind,
+    vesselColor: row.vesselColor,
+    vesselPhotoUrl: row.vesselPhotoUrl,
+    passengerCapacity: row.passengerCapacity,
+    occupiedSeats: row.occupiedSeats,
+    driverName: row.driverName,
+    estimatedDepartureLabel: eta.label,
+    estimatedDepartureIso: eta.estimatedAt ? eta.estimatedAt.toISOString() : null,
+  };
+}
+
 export function createGetDocksStatus(deps: GetDocksStatusDeps) {
   const clock = deps.clock ?? systemClock;
 
@@ -54,32 +99,17 @@ export function createGetDocksStatus(deps: GetDocksStatusDeps) {
     const snapshot = await deps.repo.getDocksLiveSnapshot();
 
     const docks: DockStatusView[] = snapshot.docks.map((dock) => {
-      const boardingRow =
-        snapshot.boardingDepartures.find((d) => d.originDockId === dock.id) ?? null;
+      const dockBoardingRows = snapshot.boardingDepartures.filter(
+        (d) => d.originDockId === dock.id,
+      );
+
+      const boardingByKind = (["BOAT", "FERRY"] as const)
+        .map((kind) => dockBoardingRows.find((d) => d.vesselKind === kind))
+        .filter((row): row is ActiveBoardingDepartureRow => Boolean(row))
+        .map((row) => toBoardingVesselView(row, now));
+
       const inboundRow =
         snapshot.inboundDepartures.find((d) => d.destinationDockId === dock.id) ?? null;
-
-      let boarding: BoardingVesselView | null = null;
-      if (boardingRow) {
-        const eta = estimateDeparture(
-          boardingRow.passengerCapacity,
-          boardingRow.occupiedSeats,
-          boardingRow.boardingStartedAt,
-          now,
-        );
-        boarding = {
-          departureId: boardingRow.id,
-          vesselName: boardingRow.vesselName,
-          vesselKind: boardingRow.vesselKind,
-          vesselColor: boardingRow.vesselColor,
-          vesselPhotoUrl: boardingRow.vesselPhotoUrl,
-          passengerCapacity: boardingRow.passengerCapacity,
-          occupiedSeats: boardingRow.occupiedSeats,
-          driverName: boardingRow.driverName,
-          estimatedDepartureLabel: eta.label,
-          estimatedDepartureIso: eta.estimatedAt ? eta.estimatedAt.toISOString() : null,
-        };
-      }
 
       let inbound: InboundVesselView | null = null;
       if (inboundRow) {
@@ -100,7 +130,7 @@ export function createGetDocksStatus(deps: GetDocksStatusDeps) {
         dockId: dock.id,
         dockCode: dock.code,
         dockName: dock.name,
-        boarding,
+        boarding: boardingByKind,
         inbound,
       };
     });

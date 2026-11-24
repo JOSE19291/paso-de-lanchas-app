@@ -23,12 +23,13 @@ export class PrismaPassengerInfoRepository implements PassengerInfoRepository {
       }),
       prisma.departure.findMany({
         where: {
-          status: "BOARDING",
+          status: { in: ["BOARDING", "BOARDING_CLOSED"] },
           vessel: { status: "ACTIVE" },
         },
         select: {
           id: true,
           originDockId: true,
+          status: true,
           passengerCapacity: true,
           occupiedSeats: true,
           boardingStartedAt: true,
@@ -90,6 +91,7 @@ export class PrismaPassengerInfoRepository implements PassengerInfoRepository {
       boardingDepartures: boardingRows.map((row) => ({
         id: row.id,
         originDockId: row.originDockId,
+        status: row.status === "BOARDING_CLOSED" ? "BOARDING_CLOSED" : "BOARDING",
         vesselName: row.vessel.name,
         vesselKind: row.vessel.kind,
         vesselColor: row.vessel.color,

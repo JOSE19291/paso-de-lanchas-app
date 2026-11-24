@@ -133,51 +133,56 @@ export function DocksLiveBoard({ initialStatus }: DocksLiveBoardProps) {
                 Abordando en este muelle
               </p>
 
-              {dock.boarding ? (
-                <div className="border-brand/20 bg-brand/5 space-y-2 rounded-xl border p-3.5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-brand text-xs font-bold">
-                        {formatKind(dock.boarding.vesselKind)}
-                      </p>
-                      <p className="text-ink truncate text-base font-bold">
-                        {dock.boarding.vesselName}
-                      </p>
-                      {dock.boarding.vesselColor ? (
-                        <p className="text-ink-muted text-xs">Color: {dock.boarding.vesselColor}</p>
-                      ) : null}
-                    </div>
+              {dock.boarding.length > 0 ? (
+                <div className="space-y-2.5">
+                  {dock.boarding.map((vessel) => (
+                    <div
+                      key={vessel.departureId}
+                      className="border-brand/20 bg-brand/5 space-y-2 rounded-xl border p-3.5"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-brand text-xs font-bold">
+                            {formatKind(vessel.vesselKind)}
+                          </p>
+                          <p className="text-ink truncate text-base font-bold">
+                            {vessel.vesselName}
+                          </p>
+                          {vessel.vesselColor ? (
+                            <p className="text-ink-muted text-xs">Color: {vessel.vesselColor}</p>
+                          ) : null}
+                        </div>
 
-                    {dock.boarding.vesselPhotoUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={dock.boarding.vesselPhotoUrl}
-                        alt={dock.boarding.vesselName}
-                        className="h-12 w-16 shrink-0 rounded-lg object-cover"
-                      />
-                    ) : null}
-                  </div>
+                        {vessel.vesselPhotoUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={vessel.vesselPhotoUrl}
+                            alt={vessel.vesselName}
+                            className="h-12 w-16 shrink-0 rounded-lg object-cover"
+                          />
+                        ) : null}
+                      </div>
 
-                  <dl className="grid grid-cols-2 gap-2 pt-1 text-xs">
-                    <div>
-                      <dt className="text-ink-muted">Ocupación</dt>
-                      <dd className="text-ink font-bold">
-                        {dock.boarding.occupiedSeats} / {dock.boarding.passengerCapacity} lugares
-                      </dd>
+                      <dl className="grid grid-cols-2 gap-2 pt-1 text-xs">
+                        <div>
+                          <dt className="text-ink-muted">Ocupación</dt>
+                          <dd className="text-ink font-bold">
+                            {vessel.occupiedSeats} / {vessel.passengerCapacity} lugares
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-ink-muted">Salida estimada</dt>
+                          <dd className="text-brand font-bold">{vessel.estimatedDepartureLabel}</dd>
+                        </div>
+                        <div className="col-span-2">
+                          <dt className="text-ink-muted">Chofer</dt>
+                          <dd className="text-ink font-medium">
+                            {vessel.driverName ?? "Por asignar"}
+                          </dd>
+                        </div>
+                      </dl>
                     </div>
-                    <div>
-                      <dt className="text-ink-muted">Salida estimada</dt>
-                      <dd className="text-brand font-bold">
-                        {dock.boarding.estimatedDepartureLabel}
-                      </dd>
-                    </div>
-                    <div className="col-span-2">
-                      <dt className="text-ink-muted">Chofer</dt>
-                      <dd className="text-ink font-medium">
-                        {dock.boarding.driverName ?? "Por asignar"}
-                      </dd>
-                    </div>
-                  </dl>
+                  ))}
                 </div>
               ) : (
                 <p className="border-line text-ink-muted rounded-xl border border-dashed p-3.5 text-xs">

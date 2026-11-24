@@ -1,4 +1,5 @@
 export type VesselKindCode = "BOAT" | "FERRY";
+export type BoardingDepartureStatusCode = "BOARDING" | "BOARDING_CLOSED";
 export type FareCategoryCode = "GENERAL" | "STUDENT" | "INAPAM" | "PEDESTRIAN" | "VEHICLE";
 export type BoardingStatusCode = "BOARDED" | "CANCELLED" | "REASSIGNED";
 
@@ -11,6 +12,7 @@ export interface DockBasicInfo {
 export interface ActiveBoardingDepartureRow {
   id: string;
   originDockId: string;
+  status: BoardingDepartureStatusCode;
   vesselName: string;
   vesselKind: VesselKindCode;
   vesselColor: string | null;

@@ -62,20 +62,36 @@ describe("passenger-info application use cases", () => {
   const fixedNow = new Date("2026-11-23T14:20:00.000Z");
   const fixedClock: Clock = { now: () => fixedNow };
 
-  it("construye el estado en vivo de ambos muelles con embarcación abordando, en camino y ETAs", async () => {
+  it("muestra simultáneamente una lancha y un transbordador abordando en el mismo muelle junto con embarcación en camino", async () => {
     const repo = new InMemoryPassengerInfoRepository();
-    repo.snapshot.boardingDepartures.push({
-      id: "dep-1",
-      originDockId: "dock-coa",
-      vesselName: "Lancha 1",
-      vesselKind: "BOAT",
-      vesselColor: "Azul y blanco",
-      vesselPhotoUrl: "https://ejemplo.test/lancha1.jpg",
-      passengerCapacity: 20,
-      occupiedSeats: 10,
-      boardingStartedAt: new Date("2026-11-23T14:15:00.000Z"),
-      driverName: "Chofer de prueba",
-    });
+    repo.snapshot.boardingDepartures.push(
+      {
+        id: "dep-boat-1",
+        originDockId: "dock-coa",
+        status: "BOARDING",
+        vesselName: "Lancha 1",
+        vesselKind: "BOAT",
+        vesselColor: "Azul y blanco",
+        vesselPhotoUrl: "https://ejemplo.test/lancha1.jpg",
+        passengerCapacity: 20,
+        occupiedSeats: 10,
+        boardingStartedAt: new Date("2026-11-23T14:15:00.000Z"),
+        driverName: "Chofer de prueba",
+      },
+      {
+        id: "dep-ferry-1",
+        originDockId: "dock-coa",
+        status: "BOARDING_CLOSED",
+        vesselName: "Transbordador 1",
+        vesselKind: "FERRY",
+        vesselColor: "Blanco",
+        vesselPhotoUrl: null,
+        passengerCapacity: 80,
+        occupiedSeats: 65,
+        boardingStartedAt: new Date("2026-11-23T14:00:00.000Z"),
+        driverName: "Capitán Ferry",
+      },
+    );
     repo.snapshot.inboundDepartures.push({
       id: "dep-2",
       destinationDockId: "dock-coa",
@@ -95,14 +111,17 @@ describe("passenger-info application use cases", () => {
 
     const coa = status.docks[0]!;
     expect(coa.dockName).toBe("Coatzacoalcos");
-    expect(coa.boarding?.vesselName).toBe("Lancha 1");
-    expect(coa.boarding?.driverName).toBe("Chofer de prueba");
-    expect(coa.boarding?.estimatedDepartureLabel).toBe("5 min");
+    expect(coa.boarding).toHaveLength(2);
+    expect(coa.boarding[0]?.vesselName).toBe("Lancha 1");
+    expect(coa.boarding[0]?.driverName).toBe("Chofer de prueba");
+    expect(coa.boarding[0]?.estimatedDepartureLabel).toBe("5 min");
+    expect(coa.boarding[1]?.vesselName).toBe("Transbordador 1");
+    expect(coa.boarding[1]?.estimatedDepartureLabel).toBe("Abordaje cerrado · por salir");
     expect(coa.inbound?.vesselName).toBe("Lancha 2");
     expect(coa.inbound?.estimatedArrivalLabel).toBe("4 min");
 
     const val = status.docks[1]!;
-    expect(val.boarding).toBeNull();
+    expect(val.boarding).toEqual([]);
     expect(val.inbound).toBeNull();
   });
 
