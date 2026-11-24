@@ -453,7 +453,7 @@ model Vehicle {
   vehicleType VehicleType @relation(fields: [vehicleTypeId], references: [id], onDelete: Restrict)
   boardings   Boarding[]
 
-  @@unique([ownerId, plate])
+  // Índice único parcial en (owner_id, plate) WHERE deleted_at IS NULL (migración placas_unicas_solo_activas)
   @@map("vehicles")
 }
 
