@@ -62,7 +62,7 @@ describe("passenger-info application use cases", () => {
   const fixedNow = new Date("2026-11-23T14:20:00.000Z");
   const fixedClock: Clock = { now: () => fixedNow };
 
-  it("muestra simultáneamente una lancha y un transbordador tanto abordando como en camino al mismo muelle", async () => {
+  it("muestra lancha y transbordador abordando y todas las embarcaciones en camino ordenadas por llegada", async () => {
     const repo = new InMemoryPassengerInfoRepository();
     repo.snapshot.boardingDepartures.push(
       {
@@ -94,7 +94,7 @@ describe("passenger-info application use cases", () => {
     );
     repo.snapshot.inboundDepartures.push(
       {
-        id: "dep-in-boat",
+        id: "dep-in-boat-later",
         destinationDockId: "dock-coa",
         originDockName: "Villa Allende",
         vesselName: "Lancha 2",
@@ -113,6 +113,16 @@ describe("passenger-info application use cases", () => {
         vesselPhotoUrl: null,
         departedAt: new Date("2026-11-23T14:16:00.000Z"),
       },
+      {
+        id: "dep-in-boat-first",
+        destinationDockId: "dock-coa",
+        originDockName: "Villa Allende",
+        vesselName: "Lancha 3",
+        vesselKind: "BOAT",
+        vesselColor: "Azul",
+        vesselPhotoUrl: null,
+        departedAt: new Date("2026-11-23T14:12:00.000Z"),
+      },
     );
 
     const getDocksStatus = createGetDocksStatus({ repo, clock: fixedClock });
@@ -130,11 +140,13 @@ describe("passenger-info application use cases", () => {
     expect(coa.boarding[1]?.vesselName).toBe("Transbordador 1");
     expect(coa.boarding[1]?.estimatedDepartureLabel).toBe("Abordaje cerrado · por salir");
 
-    expect(coa.inbound).toHaveLength(2);
-    expect(coa.inbound[0]?.vesselName).toBe("Lancha 2");
-    expect(coa.inbound[0]?.estimatedArrivalLabel).toBe("4 min");
-    expect(coa.inbound[1]?.vesselName).toBe("Transbordador 2");
-    expect(coa.inbound[1]?.estimatedArrivalLabel).toBe("6 min");
+    expect(coa.inbound).toHaveLength(3);
+    expect(coa.inbound[0]?.vesselName).toBe("Lancha 3");
+    expect(coa.inbound[0]?.estimatedArrivalLabel).toBe("2 min");
+    expect(coa.inbound[1]?.vesselName).toBe("Lancha 2");
+    expect(coa.inbound[1]?.estimatedArrivalLabel).toBe("4 min");
+    expect(coa.inbound[2]?.vesselName).toBe("Transbordador 2");
+    expect(coa.inbound[2]?.estimatedArrivalLabel).toBe("6 min");
 
     const val = status.docks[1]!;
     expect(val.boarding).toEqual([]);

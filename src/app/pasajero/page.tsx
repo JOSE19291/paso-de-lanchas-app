@@ -72,6 +72,19 @@ export default async function PassengerPage() {
           </Link>
 
           <Link
+            href="/pasajero/vehiculos"
+            className="border-brand/20 hover:border-brand flex flex-col justify-between rounded-2xl border bg-white p-4 shadow-xs transition"
+          >
+            <div>
+              <p className="font-heading text-brand text-base font-bold">Mis vehículos</p>
+              <p className="text-ink-muted mt-1 text-xs">
+                Registra autos, motos o camionetas para abordar el transbordador (RF-039 a RF-042)
+              </p>
+            </div>
+            <span className="text-brand mt-3 text-xs font-bold">Abrir →</span>
+          </Link>
+
+          <Link
             href="/pasajero/descuento"
             className="border-brand/20 hover:border-brand flex flex-col justify-between rounded-2xl border bg-white p-4 shadow-xs transition"
           >

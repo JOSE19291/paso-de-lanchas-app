@@ -128,13 +128,13 @@ export function createGetDocksStatus(deps: GetDocksStatusDeps) {
         .filter((row): row is ActiveBoardingDepartureRow => Boolean(row))
         .map((row) => toBoardingVesselView(row, now));
 
-      const dockInboundRows = snapshot.inboundDepartures.filter(
-        (d) => d.destinationDockId === dock.id,
-      );
-
-      const inboundByKind = (["BOAT", "FERRY"] as const)
-        .map((kind) => dockInboundRows.find((d) => d.vesselKind === kind))
-        .filter((row): row is ActiveInboundDepartureRow => Boolean(row))
+      const inbound = snapshot.inboundDepartures
+        .filter((d) => d.destinationDockId === dock.id)
+        .sort((a, b) => {
+          const aTime = a.departedAt ? a.departedAt.getTime() : Number.POSITIVE_INFINITY;
+          const bTime = b.departedAt ? b.departedAt.getTime() : Number.POSITIVE_INFINITY;
+          return aTime - bTime;
+        })
         .map((row) => toInboundVesselView(row, snapshot.crossingMinutes, now));
 
       return {
@@ -142,7 +142,7 @@ export function createGetDocksStatus(deps: GetDocksStatusDeps) {
         dockCode: dock.code,
         dockName: dock.name,
         boarding: boardingByKind,
-        inbound: inboundByKind,
+        inbound,
       };
     });
 
